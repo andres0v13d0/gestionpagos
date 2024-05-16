@@ -36,23 +36,23 @@ def add_transaction():
     
     if not description or not amount_str or not category:
         error = 'Todos los campos son obligatorios'
-        return render_template('contabilidad.html', transactions=transactions, contratos=contratos, error=error)
+        return render_template('contratos.html', transactions=transactions, contratos=contratos, error=error)
     
     try:
         amount = float(amount_str)
     except ValueError:
         error = 'El monto debe ser un número válido'
-        return render_template('contabilidad.html', transactions=transactions, contratos=contratos, error=error)
+        return render_template('contratos.html', transactions=transactions, contratos=contratos, error=error)
     
     if amount <= 0:
         error = 'El monto debe ser mayor que cero'
-        return render_template('contabilidad.html', transactions=transactions, contratos=contratos, error=error)
+        return render_template('contratos.html', transactions=transactions, contratos=contratos, error=error)
     
     transactions.append({'description': description, 'amount': amount, 'category': category})
     
-    return render_template('contabilidad.html', transactions=transactions, contratos=contratos)
+    return render_template('contratos.html', transactions=transactions, contratos=contratos)
 
-@app.route('/crear_contrato', methods=['POST'])
+"""@app.route('/crear_contrato', methods=['POST'])
 def crear_contrato():
     nombre_condominio = request.form.get('nombre_condominio', '').strip()
     fecha_inicio = request.form.get('fecha_inicio', '').strip()
@@ -61,23 +61,23 @@ def crear_contrato():
     
     if not nombre_condominio or not fecha_inicio or not duracion_meses_str or not monto_mensual_str:
         error = 'Todos los campos son obligatorios'
-        return render_template('contabilidad.html', transactions=transactions, contratos=contratos, error=error)
+        return render_template('contratos.html', transactions=transactions, contratos=contratos, error=error)
     
     try:
         duracion_meses = int(duracion_meses_str)
         monto_mensual = float(monto_mensual_str)
     except ValueError:
         error = 'La duración en meses y el monto mensual deben ser números válidos'
-        return render_template('contabilidad.html', transactions=transactions, contratos=contratos, error=error)
+        return render_template('contratos.html', transactions=transactions, contratos=contratos, error=error)
     
     if duracion_meses <= 0 or monto_mensual <= 0:
         error = 'La duración en meses y el monto mensual deben ser mayores que cero'
-        return render_template('contabilidad.html', transactions=transactions, contratos=contratos, error=error)
+        return render_template('contratos.html', transactions=transactions, contratos=contratos, error=error)
     
     contrato = ContratoCondominio(nombre_condominio, fecha_inicio, duracion_meses, monto_mensual)
     contratos.append(contrato.obtener_informacion_contrato())
     
-    return render_template('contabilidad.html', transactions=transactions, contratos=contratos)
-
+    return render_template('contratos.html', transactions=transactions, contratos=contratos)
+"""
 if __name__ == '__main__':
     app.run(debug=True)
