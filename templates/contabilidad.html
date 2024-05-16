@@ -64,6 +64,11 @@
 <body>
     <div class="container">
         <h1>Contabilidad</h1>
+
+        {% if error %}
+            <p class="error-message">{{ error }}</p>
+        {% endif %}
+
         <form class="transaction-form" action="/add_transaction" method="post">
             <label for="description">Descripción:</label>
             <input type="text" id="description" name="description" required>
