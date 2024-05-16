@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contabilidad</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            width: 80%;
+            margin: 20px auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .invoice-form {
+            margin-bottom: 20px;
+        }
+        .invoice-form label {
+            display: block;
+            margin-bottom: 5px;
+            color: #666;
+        }
+        .invoice-form input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        .invoice-form input[type="file"] {
+            margin-bottom: 10px;
+        }
+        .invoice-form input[type="submit"] {
+            background-color: #4caf50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .invoice-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .invoice-table th, .invoice-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .invoice-table th {
+            background-color: #f2f2f2;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Facturación</h1>
+
+        {% if error %}
+            <p class="error-message">{{ error }}</p>
+        {% endif %}
+
+        <form class="invoice-form" action="/generate_invoice" method="post" enctype="multipart/form-data">
+            <label for="resident_name">Nombre del Residente:</label>
+            <input type="text" id="resident_name" name="resident_name" required>
+            <label for="amount">Monto:</label>
+            <input type="text" id="amount" name="amount" required>
+            <label for="details">Detalles:</label>
+            <input type="text" id="details" name="details" required>
+            <label for="logo">Logotipo del Condominio:</label>
+            <input type="file" id="logo" name="logo_path">
+            <input type="submit" value="Generar Factura">
+        </form>
+        <table class="invoice-table">
+            <thead>
+                <tr>
+                    <th>Residente</th>
+                    <th>Monto</th>
+                    <th>Factura</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for invoice in invoices %}
+                <tr>
+                    <td>{{ invoice.resident_name }}</td>
+                    <td>{{ invoice.amount }}</td>
+                    <td><a href="/download_invoice/{{ invoice.invoice_path }}">Descargar</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
