@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contabilidad de Condominio</title>
+</head>
+<body>
+    <h1>Contabilidad de Condominio</h1>
+    
+    <h2>Transacciones</h2>
+    <form action="/add_transaction" method="POST">
+        <label for="description">Descripción:</label>
+        <input type="text" id="description" name="description" required><br><br>
+        
+        <label for="amount">Monto:</label>
+        <input type="number" id="amount" name="amount" step="0.01" required><br><br>
+        
+        <label for="category">Categoría:</label>
+        <input type="text" id="category" name="category" required><br><br>
+        
+        <button type="submit">Agregar Transacción</button>
+    </form>
+
+    {% if error %}
+        <p style="color: red;">{{ error }}</p>
+    {% endif %}
+
+    <h2>Contratos</h2>
+    <form action="/crear_contrato" method="POST">
+        <label for="nombre_condominio">Nombre del condominio:</label>
+        <input type="text" id="nombre_condominio" name="nombre_condominio" required><br><br>
+        
+        <label for="fecha_inicio">Fecha de inicio:</label>
+        <input type="date" id="fecha_inicio" name="fecha_inicio" required><br><br>
+        
+        <label for="duracion_meses">Duración en meses:</label>
+        <input type="number" id="duracion_meses" name="duracion_meses" required><br><br>
+        
+        <label for="monto_mensual">Monto mensual:</label>
+        <input type="number" id="monto_mensual" name="monto_mensual" step="0.01" required><br><br>
+        
+        <button type="submit">Crear Contrato</button>
+    </form>
+
+    {% for transaction in transactions %}
+        <div>
+            <p><strong>Descripción:</strong> {{ transaction.description }}</p>
+            <p><strong>Monto:</strong> ${{ transaction.amount }}</p>
+            <p><strong>Categoría:</strong> {{ transaction.category }}</p>
+        </div>
+    {% endfor %}
+
+    {% for contrato in contratos %}
+        <div>
+            <h3>Información del Contrato</h3>
+            <p><strong>Nombre del condominio:</strong> {{ contrato.nombre_condominio }}</p>
+            <p><strong>Fecha de inicio:</strong> {{ contrato.fecha_inicio }}</p>
+            <p><strong>Duración en meses:</strong> {{ contrato.duracion_meses }}</p>
+            <p><strong>Monto mensual:</strong> ${{ contrato.monto_mensual }}</p>
+        </div>
+    {% endfor %}
+</body>
+</html>
