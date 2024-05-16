@@ -52,7 +52,7 @@ def add_transaction():
     
     return render_template('contratos.html', transactions=transactions, contratos=contratos)
 
-"""@app.route('/crear_contrato', methods=['POST'])
+@app.route('/crear_contrato', methods=['POST'])
 def crear_contrato():
     nombre_condominio = request.form.get('nombre_condominio', '').strip()
     fecha_inicio = request.form.get('fecha_inicio', '').strip()
@@ -78,6 +78,6 @@ def crear_contrato():
     contratos.append(contrato.obtener_informacion_contrato())
     
     return render_template('contratos.html', transactions=transactions, contratos=contratos)
-"""
+
 if __name__ == '__main__':
     app.run(debug=True)
