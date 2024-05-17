@@ -1,4 +1,5 @@
 from flask import Flask, render_template
+from negocio.contabilidad import add_transaction
 
 app = Flask(__name__)
 
@@ -8,7 +9,8 @@ def index():
 
 @app.route('/contabilidad')
 def contabilidad():
-    return render_template('contabilidad.html')
+    transa = add_transaction()
+    return render_template('contabilidad.html', transa=transa)
 
 @app.route('/facturacion')
 def facturacion():
