@@ -63,8 +63,8 @@
 </head>
 <body>
     <div class="container">
-        <div id="error-message"></div>
-
+        <h1>Registro de Transacciones</h1>
+        <div id="error-message" style="color: red;"></div>
         <form class="transaction-form" id="transaction-form">
             <label for="description">Descripción:</label>
             <input type="text" id="description" name="description" required>
@@ -102,7 +102,14 @@
                 },
                 body: JSON.stringify({ description, amount, category }),
             })
-            .then(response => response.json())
+            .then(response => {
+                // Check if the response is in JSON format
+                if (response.headers.get('content-type')?.includes('application/json')) {
+                    return response.json();
+                } else {
+                    throw new Error('Invalid response from server');
+                }
+            })
             .then(data => {
                 if (data.error) {
                     document.getElementById('error-message').textContent = data.error;
@@ -121,6 +128,9 @@
                     document.getElementById('category').value = '';
                     document.getElementById('error-message').textContent = '';
                 }
+            })
+            .catch(error => {
+                document.getElementById('error-message').textContent = error.message;
             });
         });
     </script>
