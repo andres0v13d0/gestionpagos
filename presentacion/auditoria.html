@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auditoría de Transacciones</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            width: 80%;
+            margin: 20px auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .transaction-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .transaction-table th, .transaction-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .transaction-table th {
+            background-color: #f2f2f2;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Registro de Auditoría de Transacciones</h1>
+        <table class="transaction-table" id="audit-transaction-table">
+            <thead>
+                <tr>
+                    <th>Descripción</th>
+                    <th>Monto</th>
+                    <th>Categoría</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+            </tbody>
+        </table>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            fetch('/get_transactions')
+                .then(response => {
+                    // Verificar si la respuesta es en formato JSON
+                    if (response.headers.get('content-type')?.includes('application/json')) {
+                        return response.json();
+                    } else {
+                        throw new Error('Respuesta inválida del servidor');
+                    }
+                })
+                .then(data => {
+                    const tbody = document.querySelector('#audit-transaction-table tbody');
+                    data.stories.forEach(storie => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${storie.des}</td>
+                            <td>${storie.amount}</td>
+                            <td>${storie.cat}</td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error al obtener las transacciones:', error);
+                });
+        });
+
+    </script>
+</body>
+</html>
