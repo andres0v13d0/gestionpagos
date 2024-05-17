@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -144,6 +143,124 @@
             </tbody>
         </table>
     </div>
-    <script src="facturacion.js"></script>
+    <script>
+          function validarCedula(ci) {
+            var isNumeric = true;
+            var total = 0, individual;
+
+            for (var position = 0; position < 10; position++) {
+                individual = ci.toString().substring(position, position + 1);
+
+                if (isNaN(individual)) {
+                    console.log(ci, position, individual, isNaN(individual));
+                    isNumeric = false;
+                    break;
+                } else {
+                    if (position < 9) {
+                        if (position % 2 == 0) {
+                            if (parseInt(individual) * 2 > 9) {
+                                total += 1 + ((parseInt(individual) * 2) % 10);
+                            } else {
+                                total += parseInt(individual) * 2;
+                            }
+                        } else {
+                            total += parseInt(individual);
+                        }
+                    }
+                }
+            }
+
+            if ((total % 10) != 0) {
+                total = (total - (total % 10) + 10) - total;
+            } else {
+                total = 0;
+            }
+
+            if (isNumeric) {
+                if (ci.toString().length != 10) {
+                    alert("La c\u00E9dula debe ser de: 10 d\u00EDgitos.");
+                    return false;
+                }
+
+                if (parseInt(ci, 10) == 0) {
+                    alert("La c\u00E9dula ingresada no puede ser cero.");
+                    return false;
+                }
+
+                if (total != parseInt(individual)) {
+                    alert("La c\u00E9dula ingresada no es v\u00E1lida.");
+                    return false;
+                }
+
+                console.log('cédula válida', ci);
+                return true;
+            }
+
+            alert("El dato solo puede contener numeros.");
+            return false;
+            return cedula.length === 11; // Ejemplo simple de validación
+        }
+
+        document.getElementById('billingForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const owner = document.getElementById('owner').value.trim();
+            const idNumber = document.getElementById('idNumber').value.trim();
+            const paymentReason = document.getElementById('paymentReason').value.trim();
+            const amount = document.getElementById('amount').value.trim();
+            const paymentDate = document.getElementById('paymentDate').value.trim();
+
+            if (!validarCedula(idNumber)) {
+                alert('La cédula ingresada no es válida');
+                return;
+            }
+
+            fetch('/add_invoice', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ owner, idNumber, paymentReason, amount, paymentDate }),
+            })
+            .then(response => {
+                // Check if the response is in JSON format
+                if (response.headers.get('content-type')?.includes('application/json')) {
+                    return response.json();
+                } else {
+                    throw new Error('Invalid response from server');
+                }
+            })
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    // Add the invoice to the table
+                    const invoiceTable = document.getElementById('invoiceTable').getElementsByTagName('tbody')[0];
+                    const newRow = invoiceTable.insertRow();
+                    newRow.insertCell(0).innerText = data.invoice.owner;
+                    newRow.insertCell(1).innerText = data.invoice.idNumber;
+                    newRow.insertCell(2).innerText = data.invoice.paymentReason;
+                    newRow.insertCell(3).innerText = '$' + data.invoice.amount.toFixed(2);
+                    newRow.insertCell(4).innerText = data.invoice.paymentDate;
+
+                    // Add delete button
+                    const actionsCell = newRow.insertCell(5);
+                    const deleteButton = document.createElement('button');
+                    deleteButton.innerText = 'Eliminar';
+                    deleteButton.className = 'action-btn';
+                    deleteButton.onclick = function() {
+                        invoiceTable.deleteRow(newRow.rowIndex - 1);
+                    };
+                    actionsCell.appendChild(deleteButton);
+
+                    // Clear the form
+                    document.getElementById('billingForm').reset();
+                }
+            })
+            .catch(error => {
+                alert('Error: ' + error.message);
+            });
+        });
+    </script>
 </body>
 </html>
