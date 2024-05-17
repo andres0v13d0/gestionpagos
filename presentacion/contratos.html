@@ -3,167 +3,135 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contratos de Condominio</title>
+    <title>Módulo de Contratos</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        background-color: #e0f7fa;
         }
 
-        h2 {
-            color: #333;
-            text-align: center;
+        h1, h2 {
+        color: #333;
+        }
+
+        .container {
+        background-color: #fff;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        margin-bottom: 20px;
+        max-width: 700px;
+        margin: 20px auto;
         }
 
         form {
-            max-width: 400px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f9f9f9;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        display: flex;
+        flex-direction: column;
         }
 
         label {
-            display: block;
-            margin-bottom: 10px;
+        margin-top: 10px;
         }
 
-        input[type="text"],
-        input[type="number"],
-        input[type="date"] {
-            width: 100%;
-            padding: 8px;
-            margin-bottom: 10px;
-            border: 1px solid #ccc;
-            border-radius: 3px;
-            box-sizing: border-box;
+        input, button {
+        padding: 8px;
+        margin-top: 5px;
+        border-radius: 5px;
+        border: 1px solid #ddd;
         }
 
-        button[type="submit"] {
-            width: 100%;
-            padding: 10px;
-            background-color: #007bff;
-            color: #fff;
-            border: none;
-            border-radius: 3px;
-            cursor: pointer;
-            font-size: 16px;
+        button {
+        background-color: #007bff;
+        color: #fff;
+        cursor: pointer;
         }
 
-        button[type="submit"]:hover {
-            background-color: #0056b3;
-        }
-
-        .transaction-container,
-        .contract-container {
-            margin-top: 20px;
-            padding: 20px;
-            background-color: #f9f9f9;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .contract-container h3 {
-            color: #333;
-        }
-
-        .contract-container p {
-            margin-bottom: 10px;
-        }
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-        }
-
-        h2 {
-            color: #333;
-            text-align: center;
+        button:hover {
+        background-color: #0056b3;
         }
 
         table {
-            width: 80%;
-            margin: 20px auto;
-            border-collapse: collapse;
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
         }
 
         th, td {
-            padding: 8px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+        border-radius: 5px;
         }
 
         th {
-            background-color: #f2f2f2;
-        }
-
-        tr:hover {
-            background-color: #f5f5f5;
-        }
-
-        .center {
-            text-align: center;
+        background-color: #f4f4f4;
         }
     </style>
 </head>
 <body>
-    <h2>Contratos</h2>
-    <form action="/crear_contrato" method="POST">
-        <label for="nombre_condominio">Nombre del condominio:</label>
-        <input type="text" id="nombre_condominio" name="nombre_condominio" required><br><br>
-        
-        <label for="fecha_inicio">Fecha de inicio:</label>
-        <input type="date" id="fecha_inicio" name="fecha_inicio" required><br><br>
-        
-        <label for="duracion_meses">Duración en meses:</label>
-        <input type="number" id="duracion_meses" name="duracion_meses" required><br><br>
-        
-        <label for="monto_mensual">Monto mensual:</label>
-        <input type="number" id="monto_mensual" name="monto_mensual" step="0.01" required><br><br>
-        
-        <button type="submit">Crear Contrato</button>
-    </form>
-    <h2>Contratos</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>Nombre del Condominio</th>
-                <th>Fecha de Inicio</th>
-                <th>Duración en Meses</th>
-                <th>Monto Mensual</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for contrato in contratos %}
-            <tr>
-                <td>{{ contrato.nombre_condominio }}</td>
-                <td>{{ contrato.fecha_inicio }}</td>
-                <td class="center">{{ contrato.duracion_meses }}</td>
-                <td class="center">{{ contrato.monto_mensual }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-<!--
-    {% for transaction in transactions %}
-        <div>
-            <p><strong>Descripción:</strong> {{ transaction.description }}</p>
-            <p><strong>Monto:</strong> ${{ transaction.amount }}</p>
-            <p><strong>Categoría:</strong> {{ transaction.category }}</p>
-        </div>
-    {% endfor %}
+    <center><h1>Módulo de Contratos</h1></center>
 
-    {% for contrato in contratos %}
-        <div>
-            <h3>Información del Contrato</h3>
-            <p><strong>Nombre del condominio:</strong> {{ contrato.nombre_condominio }}</p>
-            <p><strong>Fecha de inicio:</strong> {{ contrato.fecha_inicio }}</p>
-            <p><strong>Duración en meses:</strong> {{ contrato.duracion_meses }}</p>
-            <p><strong>Monto mensual:</strong> ${{ contrato.monto_mensual }}</p>
-        </div>
-    {% endfor %}
--->
+    <div class="container">
+        <h2>Crear Nuevo Contrato</h2>
+        <form id="contract-form">
+            <label for="resident_name">Nombre del Residente:</label>
+            <input type="text" id="resident_name" name="resident_name" required>
+            <label for="id_number">Número de Cédula:</label>
+            <input type="text" id="id_number" name="id_number" required>
+            <label for="property_address">Dirección de la Propiedad:</label>
+            <input type="text" id="property_address" name="property_address" required>
+            <label for="start_date">Fecha de Inicio:</label>
+            <input type="date" id="start_date" name="start_date" required>
+            <label for="end_date">Fecha de Vencimiento:</label>
+            <input type="date" id="end_date" name="end_date" required>
+            <label for="rent">Renta:</label>
+            <input type="number" id="rent" name="rent" min="1" required>
+            <button type="submit">Crear Contrato</button>
+        </form>
+    </div>
+
+    <div class="container">
+        <h2>Lista de Contratos</h2>
+        <table id="contracts-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre del Residente</th>
+                    <th>Número de Cédula</th>
+                    <th>Dirección de la Propiedad</th>
+                    <th>Fecha de Inicio</th>
+                    <th>Fecha de Vencimiento</th>
+                    <th>Renta</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Los contratos se llenarán aquí -->
+            </tbody>
+        </table>
+    </div>
+
+    <div class="container">
+        <h2>Próximos Vencimientos</h2>
+        <table id="upcoming-expirations-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre del Residente</th>
+                    <th>Número de Cédula</th>
+                    <th>Dirección de la Propiedad</th>
+                    <th>Fecha de Inicio</th>
+                    <th>Fecha de Vencimiento</th>
+                    <th>Renta</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Los vencimientos próximos se llenarán aquí -->
+            </tbody>
+        </table>
+    </div>
+
+    <script src="..\negocio\contratos.js"></script>
 </body>
 </html>
