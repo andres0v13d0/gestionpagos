@@ -179,7 +179,7 @@
         }
 
         function deleteContract(contractId) {
-            fetch(`/delete_contracts/${contractId + 1}`, {
+            fetch(`/delete_contracts/${contractId}`, {
                 method: 'DELETE',
             })
             .then(response => {

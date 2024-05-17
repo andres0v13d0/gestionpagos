@@ -23,7 +23,8 @@ module.exports = function (app) {
     // Agregar un nuevo contrato
     app.post('/add_contract', (req, res) => {
         const contract = req.body;
-        contract.id = nextId++;
+        contract.id = nextId;
+        nextId++;
         contracts.push(contract);
         res.status(201).json(contract);
     });
@@ -44,7 +45,7 @@ module.exports = function (app) {
 
     app.delete('/delete_contracts/:id', (req, res) => {
         const id = parseInt(req.params.id);
-        const index = contracts.findIndex(contract => contract.id == id);
+        const index = contracts.findIndex(contract => parseInt(contract.id) == parseInt(id));
     
         if (index !== -1) {
             contracts.splice(index, 1);
