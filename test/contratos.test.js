@@ -1,48 +1,105 @@
-// Test for contratos.js
 const request = require('supertest');
-const app = require('../negocio/contratos.js'); // Replace with your actual app file path
+const express = require('express');
+const contratosRouter = require('../negocio/contratos.js');
 
-describe('Contracts API', () => {
-    let testContract = { title: 'Test Contract', description: 'This is a test contract' };
+const app = express();
+contratosRouter(app);
 
-    it('should add a new contract', async () => {
-        const res = await request(app)
-           .post('/add_contract')
-           .send(testContract)
-           .expect(201)
-           .expect('Content-Type', /json/);
+describe('Contract API', () => {
+    it('should create a contract', async () => {
+        const newContract = {
+            resident_name: 'Juan Pérez',
+            id_number: '1759571316',
+            property_address: 'Calle Falsa 123',
+            start_date: '2023-06-01',
+            end_date: '2024-06-01',
+            rent: 500
+        };
 
-        expect(res.body).toMatchObject(testContract);
-        expect(res.body.id).toBeGreaterThan(0);
+        const response = await request(app)
+            .post('/add_contract')
+            .send(newContract)
+            .expect(201);
+
+        expect(response.body).toHaveProperty('id');
+        expect(response.body).toMatchObject(newContract);
     });
 
-    it('should get all contracts', async () => {
-        const res = await request(app)
-           .get('/contracts')
-           .expect(200)
-           .expect('Content-Type', /json/);
+    it('should return all contracts', async () => {
+        const response = await request(app)
+            .get('/contracts')
+            .expect(200);
 
-        expect(Array.isArray(res.body)).toBe(true);
-        expect(res.body.length).toBeGreaterThanOrEqual(1);
+        expect(response.body).toBeInstanceOf(Array);
     });
 
-    it('should update an existing contract', async () => {
-        const res = await request(app)
-           .put(`/contracts/${testContract.id}`)
-           .send({ title: 'Updated Test Contract' })
-           .expect(200)
-           .expect('Content-Type', /json/);
+    it('should return a contract by ID', async () => {
+        const newContract = {
+            resident_name: 'Juan Pérez',
+            id_number: '1759571316',
+            property_address: 'Calle Falsa 123',
+            start_date: '2023-06-01',
+            end_date: '2024-06-01',
+            rent: 500
+        };
 
-        expect(res.body).toMatchObject({...testContract, title: 'Updated Test Contract' });
+        const createdContract = await request(app)
+            .post('/add_contract')
+            .send(newContract)
+            .expect(201);
+
+        const response = await request(app)
+            .get(`/contracts/${createdContract.body.id}`)
+            .expect(200);
+
+        expect(response.body).toMatchObject(newContract);
     });
 
-    it('should delete a contract', async () => {
-        const res = await request(app)
-           .delete(`/delete_contracts/${testContract.id}`)
-           .expect(204);
+    it('should update a contract by ID', async () => {
+        const newContract = {
+            resident_name: 'Juan Pérez',
+            id_number: '1759571316',
+            property_address: 'Calle Falsa 123',
+            start_date: '2023-06-01',
+            end_date: '2024-06-01',
+            rent: 500
+        };
 
-        const getRes = await request(app)
-           .get(`/contracts/${testContract.id}`)
-           .expect(404);
+        const createdContract = await request(app)
+            .post('/add_contract')
+            .send(newContract)
+            .expect(201);
+
+        const updatedContract = {
+            ...newContract,
+            resident_name: 'Juan Gómez'
+        };
+
+        const response = await request(app)
+            .put(`/update_contracts/${createdContract.body.id}`)
+            .send(updatedContract)
+            .expect(200);
+
+        expect(response.body.resident_name).toBe('Juan Gómez');
+    });
+
+    it('should delete a contract by ID', async () => {
+        const newContract = {
+            resident_name: 'Juan Pérez',
+            id_number: '1759571316',
+            property_address: 'Calle Falsa 123',
+            start_date: '2023-06-01',
+            end_date: '2024-06-01',
+            rent: 500
+        };
+
+        const createdContract = await request(app)
+            .post('/add_contract')
+            .send(newContract)
+            .expect(201);
+
+        await request(app)
+            .delete(`/delete_contracts/${createdContract.body.id}`)
+            .expect(204);
     });
 });

@@ -6,67 +6,68 @@
     <title>Módulo de Contratos</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            background-color: #e0f7fa;
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        background-color: #e0f7fa;
         }
 
         h1, h2 {
-            color: #333;
+        color: #333;
         }
 
         .container {
-            background-color: #fff;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            padding: 20px;
-            margin-bottom: 20px;
-            max-width: 700px;
-            margin: 20px auto;
+        background-color: #fff;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        margin-bottom: 20px;
+        max-width: 700px;
+        margin: 20px auto;
         }
 
         form {
-            display: flex;
-            flex-direction: column;
+        display: flex;
+        flex-direction: column;
         }
 
         label {
-            margin-top: 10px;
+        margin-top: 10px;
         }
 
         input, button {
-            padding: 8px;
-            margin-top: 5px;
-            border-radius: 5px;
-            border: 1px solid #ddd;
+        padding: 8px;
+        margin-top: 5px;
+        border-radius: 5px;
+        border: 1px solid #ddd;
         }
 
         button {
-            background-color: #007bff;
-            color: #fff;
-            cursor: pointer;
+        background-color: #007bff;
+        color: #fff;
+        cursor: pointer;
         }
 
         button:hover {
-            background-color: #0056b3;
+        background-color: #0056b3;
         }
 
         table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
         }
 
         th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-            border-radius: 5px;
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+        border-radius: 5px;
         }
 
         th {
-            background-color: #f4f4f4;
+        background-color: #f4f4f4;
         }
+
     </style>
 </head>
 <body>
@@ -87,7 +88,7 @@
             <input type="date" id="end_date" name="end_date" required>
             <label for="rent">Renta:</label>
             <input type="number" id="rent" name="rent" min="1" required>
-            <button type="button" onclick="submitContract()">Crear Contrato</button>
+            <button type="submit">Crear Contrato</button>
         </form>
     </div>
 
@@ -133,66 +134,127 @@
     </div>
 
     <script>
-        function submitContract() {
-            const contractData = {
-                resident_name: document.getElementById('resident_name').value,
-                id_number: document.getElementById('id_number').value,
-                property_address: document.getElementById('property_address').value,
-                start_date: document.getElementById('start_date').value,
-                end_date: document.getElementById('end_date').value,
-                rent: document.getElementById('rent').value
-            };
+        document.getElementById('contract-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const resident_name = document.getElementById('resident_name').value.trim();
+            const id_number = document.getElementById('id_number').value.trim();
+            const property_address = document.getElementById('property_address').value.trim();
+            const start_date = document.getElementById('start_date').value;
+            const end_date = document.getElementById('end_date').value;
+            const rent = document.getElementById('rent').value;
 
             fetch('/add_contract', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(contractData),
+                body: JSON.stringify({ resident_name, id_number, property_address, start_date, end_date, rent }),
             })
             .then(response => response.json())
             .then(data => {
-                // Actualizar la tabla de contratos con el nuevo contrato
-                const tbody = document.querySelector('#contracts-table tbody');
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    const tbody = document.querySelector('#contracts-table tbody');
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${data.id}</td>
+                        <td>${data.resident_name}</td>
+                        <td>${data.id_number}</td>
+                        <td>${data.property_address}</td>
+                        <td>${data.start_date}</td>
+                        <td>${data.end_date}</td>
+                        <td>${data.rent}</td>
+                        <td>
+                            <button onclick="editContract(${data.id})">Editar</button>
+                            <button onclick="deleteContract(${data.id})">Eliminar</button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+
+                    checkUpcomingExpiration(data);
+                }
+            });
+        } 
+        );
+
+        function deleteContract(id) {
+            fetch(`/delete_contracts/${id}`, { method: 'DELETE' })
+                .then(() => {
+                    const tbody = document.querySelector('#contracts-table tbody');
+                    for (const row of tbody.rows) {
+                        if (parseInt(row.cells[0].innerText) === id) {
+                            tbody.removeChild(row);
+                            break;
+                        }
+                    }
+
+                    const expirationTbody = document.querySelector('#upcoming-expirations-table tbody');
+                    for (const row of expirationTbody.rows) {
+                        if (parseInt(row.cells[0].innerText) === id) {
+                            expirationTbody.removeChild(row);
+                            break;
+                        }
+                    }
+                });
+        }
+
+        function loadContracts() {
+            fetch('/contracts')
+                .then(response => response.json())
+                .then(contracts => {
+                    const tbody = document.querySelector('#contracts-table tbody');
+                    tbody.innerHTML = '';
+                    contracts.forEach(contract => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${contract.id}</td>
+                            <td>${contract.resident_name}</td>
+                            <td>${contract.id_number}</td>
+                            <td>${contract.property_address}</td>
+                            <td>${contract.start_date}</td>
+                            <td>${contract.end_date}</td>
+                            <td>${contract.rent}</td>
+                            <td>
+                                <button onclick="editContract(${contract.id})">Editar</button>
+                                <button onclick="deleteContract(${contract.id})">Eliminar</button>
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+
+                        checkUpcomingExpiration(contract);
+                    });
+                });
+        }
+
+        function checkUpcomingExpiration(contract) {
+            const now = new Date();
+            const end_date = new Date(contract.end_date);
+            const thirtyDaysFromNow = new Date(now);
+            thirtyDaysFromNow.setDate(now.getDate() + 30);
+
+            if (end_date <= thirtyDaysFromNow) {
+                const tbody = document.querySelector('#upcoming-expirations-table tbody');
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td>${data.id}</td>
-                    <td>${data.resident_name}</td>
-                    <td>${data.id_number}</td>
-                    <td>${data.property_address}</td>
-                    <td>${data.start_date}</td>
-                    <td>${data.end_date}</td>
-                    <td>${data.rent}</td>
-                    <td><button onclick="deleteContract(${data.id})" data-id="${data.id}">Eliminar</button></td>
+                    <td>${contract.id}</td>
+                    <td>${contract.resident_name}</td>
+                    <td>${contract.id_number}</td>
+                    <td>${contract.property_address}</td>
+                    <td>${contract.start_date}</td>
+                    <td>${contract.end_date}</td>
+                    <td>${contract.rent}</td>
+                    <td>
+                        <button onclick="editContract(${contract.id})">Editar</button>
+                        <button onclick="deleteContract(${contract.id})">Eliminar</button>
+                    </td>
                 `;
                 tbody.appendChild(row);
-
-                // Limpiar los campos del formulario después de agregar el contrato
-                document.getElementById('resident_name').value = '';
-                document.getElementById('id_number').value = '';
-                document.getElementById('property_address').value = '';
-                document.getElementById('start_date').value = '';
-                document.getElementById('end_date').value = '';
-                document.getElementById('rent').value = '';
-            })
-            .catch(error => console.error('Error al agregar contrato:', error));
+            }
         }
 
-        function deleteContract(contractId) {
-            fetch(`/delete_contracts/${contractId}`, {
-                method: 'DELETE',
-            })
-            .then(response => {
-                if (response.ok) {
-                    // Eliminar el contrato de la tabla de contratos
-                    const row = document.querySelector(`#contracts-table tbody tr[data-id="${contractId}"]`);
-                    row.parentNode.removeChild(row);
-                } else {
-                    throw new Error('Error al eliminar contrato. Estado de la respuesta: ' + response.status);
-                }
-            })
-            .catch(error => console.error('Error al eliminar contrato:', error));
-        }
+        loadContracts();
     </script>
 </body>
 </html>
