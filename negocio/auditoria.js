@@ -1,120 +1,126 @@
 const path = require('path');
 const express = require('express');
 const bodyParser = require('body-parser');
+const db = require('./db');
 
 module.exports = function(app) {
-    let transactions = [];
-    let contracts = [];
-    let nextId = 1;
-    let invoices = [];
-    let stories = [];
-
-    // Middleware to parse JSON request bodies
-    app.use(express.json());
+    app.use(bodyParser.json());
 
     app.get('/auditoria', (req, res) => {
         res.sendFile(path.join(__dirname, '../presentacion', 'auditoria.html'));
     });
 
-    app.get('/contabilidad', (req, res) => {
-        res.sendFile(path.join(__dirname, '../presentacion', 'contabilidad.html'));
+    app.get('/get_transactions', async (req, res) => {
+        try {
+            const result = await db.query('SELECT * FROM stories');
+            res.status(200).json({ stories: result.rows });
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ error: 'Error al obtener las transacciones' });
+        }
     });
 
-    app.get('/facturacion', (req, res) => {
-        res.sendFile(path.join(__dirname, '../presentacion', 'facturacion.html'));
-    });
-
-    app.get('/contratos', (req, res) => {
-        res.sendFile(path.join(__dirname, '../presentacion', 'contratos.html'));
-    });
-
-    app.get('/get_transactions', (req, res) => {
-        return res.status(200).json({stories: stories });
-    });
-
-    app.post('/add_transaction', (req, res) => {
-        const description = req.body.description.trim();
-        const amountStr = req.body.amount.trim();
-        const category = req.body.category.trim();
+    app.post('/add_transaction', async (req, res) => {
+        const { description, amount: amountStr, category } = req.body;
 
         if (!description || !amountStr || !category) {
-            const error = 'Todos los campos son obligatorios';
-            return res.status(400).json({ error: error });
+            return res.status(400).json({ error: 'Todos los campos son obligatorios' });
         }
 
         const amount = parseFloat(amountStr);
         if (isNaN(amount)) {
-            const error = 'El monto debe ser un número válido';
-            return res.status(400).json({ error: error });
+            return res.status(400).json({ error: 'El monto debe ser un número válido' });
         }
 
         if (amount <= 0) {
-            const error = 'El monto debe ser mayor que cero';
-            return res.status(400).json({ error: error });
+            return res.status(400).json({ error: 'El monto debe ser mayor que cero' });
         }
-        
-        const transaction = { description, amount, category };
-        transactions.push(transaction);
 
-        let des = "Nueva Transacción";
-        let cat = "Contabilidad";
-        const history = {des, amount, cat};
-        stories.push(history)
+        try {
+            const transaction = { description, amount, category };
+            await db.query(
+                'INSERT INTO transactions (description, amount, category) VALUES ($1, $2, $3)',
+                [description, amount, category]
+            );
 
-        return res.status(200).json({ transaction: transaction });
+            await db.query(
+                'INSERT INTO stories (description, amount, category) VALUES ($1, $2, $3)',
+                ["Nueva Transacción", amount, "Contabilidad"]
+            );
+
+            res.status(200).json({ transaction });
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ error: 'Error al registrar la transacción' });
+        }
     });
 
-    app.post('/add_invoice', (req, res) => {
-        const owner = req.body.owner.trim();
-        const idNumber = req.body.idNumber.trim();
-        const paymentReason = req.body.paymentReason.trim();
-        const amountStr = req.body.amount.trim();
-        const paymentDate = req.body.paymentDate.trim();
+    app.post('/add_invoice', async (req, res) => {
+        const { owner, idNumber, paymentReason, amount: amountStr, paymentDate } = req.body;
 
         if (!owner || !idNumber || !paymentReason || !amountStr || !paymentDate) {
-            const error = 'Todos los campos son obligatorios';
-            return res.status(400).json({ error: error });
+            return res.status(400).json({ error: 'Todos los campos son obligatorios' });
         }
 
         const amount = parseFloat(amountStr);
         if (isNaN(amount)) {
-            const error = 'El monto debe ser un número válido';
-            return res.status(400).json({ error: error });
+            return res.status(400).json({ error: 'El monto debe ser un número válido' });
         }
 
         if (amount <= 0) {
-            const error = 'El monto debe ser mayor que cero';
-            return res.status(400).json({ error: error });
+            return res.status(400).json({ error: 'El monto debe ser mayor que cero' });
         }
 
-        const invoice = {
-            owner,
-            idNumber,
-            paymentReason,
-            amount,
-            paymentDate
-        };
+        try {
+            const invoice = { owner, idNumber, paymentReason, amount, paymentDate };
+            await db.query(
+                'INSERT INTO invoices (owner, id_number, payment_reason, amount, payment_date) VALUES ($1, $2, $3, $4, $5)',
+                [owner, idNumber, paymentReason, amount, paymentDate]
+            );
 
-        invoices.push(invoice);
+            await db.query(
+                'INSERT INTO stories (description, amount, category) VALUES ($1, $2, $3)',
+                ["Nueva Factura", amount, "Facturación"]
+            );
 
-        let des = "Nueva Factura";
-        let cat = "Facturación";
-        const history = {des, amount, cat};
-        stories.push(history)
-
-        return res.status(200).json({ invoice: invoice });
+            res.status(200).json({ invoice });
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ error: 'Error al registrar la factura' });
+        }
     });
 
-    app.post('/add_contract', (req, res) => {
-        const contract = req.body;
-        contract.id = nextId;
-        nextId++;
-        contracts.push(contract);
-        let des = "Nuevo Contrato";
-        let cat = "Contratos";
-        const rent = req.body.rent;
-        const history = {des, amount: rent, cat};
-        stories.push(history)
-        res.status(201).json(contract);
+    app.post('/add_contract', async (req, res) => {
+        const { resident_name, id_number, property_address, start_date, end_date, rent } = req.body;
+
+        if (!resident_name || !id_number || !property_address || !start_date || !end_date || !rent) {
+            return res.status(400).json({ error: 'Todos los campos son obligatorios' });
+        }
+
+        if (new Date(start_date) >= new Date(end_date)) {
+            return res.status(400).json({ error: 'La fecha de vencimiento no puede ser anterior a la fecha de inicio' });
+        }
+
+        if (rent <= 0) {
+            return res.status(400).json({ error: 'La renta debe ser mayor a 0' });
+        }
+
+        try {
+            const contract = { resident_name, id_number, property_address, start_date, end_date, rent };
+            await db.query(
+                'INSERT INTO contracts (resident_name, id_number, property_address, start_date, end_date, rent) VALUES ($1, $2, $3, $4, $5, $6)',
+                [resident_name, id_number, property_address, start_date, end_date, rent]
+            );
+
+            await db.query(
+                'INSERT INTO stories (description, amount, category) VALUES ($1, $2, $3)',
+                ["Nuevo Contrato", rent, "Contratos"]
+            );
+
+            res.status(201).json({ contract });
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ error: 'Error al registrar el contrato' });
+        }
     });
 };

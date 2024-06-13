@@ -8,12 +8,8 @@
         body {
             font-family: Arial, sans-serif;
             background-color: #e0f7fa;
-            margin: 20px;
+            margin: 0;
             padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
         }
         
         .container {
@@ -22,21 +18,21 @@
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             width: 300px;
+            margin-top: 20px;
+            margin-left: 400px;
         }
         
         .container2 {
             display: flex;
-          /*DIRECCION EN COLUMNA*/
-          flex-direction: column;
-          /*CENTRAMOS EN EJE X*/
-          align-items: center;
-          /*CENTRAMOS EN EJE Y*/
-          justify-content: center;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
             background-color: #fff;
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             width: 75%;
+            margin-left: 130px;
         }
         
         h1, h2 {
@@ -47,18 +43,18 @@
             margin-bottom: 15px;
         }
         
-        label {
+        .container label {
             display: block;
             margin-bottom: 5px;
         }
         
-        input, select {
+        .container input, select {
             width: 100%;
             padding: 8px;
             box-sizing: border-box;
         }
         
-        button {
+        .container button, .container2 button {
             width: 100%;
             padding: 10px;
             background-color: #007BFF;
@@ -69,7 +65,7 @@
             border-radius: 5px;
         }
         
-        button:hover {
+        .container button:hover,  .container2 button:hover {
             background-color: #0056b3;
         }
         
@@ -90,7 +86,27 @@
     </style>
 </head>
 <body>
-    <h1>Facturación de Condominios</h1>
+    <div style="background-color: #007BFF; width: 100%; height: 50px; margin: 0; display: flex;
+        align-items: center; padding: 10px;
+        color: white; font-weight: bold;">
+        Gestión de Pagos
+        <button style="background-color: transparent; border: none;
+            color: white; font-weight: bold;
+            padding: 10px;
+            margin-left: 450px;" onclick="location.href='contabilidad.html'">Contabilidad</button>
+        <button style="background-color: white; border: none;
+            color: black; font-weight: bold;
+            padding: 10px;
+            margin-left: 10px;">Facturación</button>
+        <button style="background-color: transparent; border: none;
+        color: white; font-weight: bold;
+        padding: 10px;
+        margin-left: 10px;" onclick="location.href='contratos.html'">Contratos</button>
+        <button style="background-color: transparent; border: none;
+        color: white; font-weight: bold;
+        padding: 10px;
+        margin-left: 10px;" onclick="location.href='auditoria.html'">Auditoría</button>
+    </div>
     <div class="container">
         <form id="billingForm">
             <div class="form-group">
@@ -119,7 +135,7 @@
             </div>
             <div class="form-group">
                 <label for="paymentDate">Fecha de Pago:</label>
-                <input type="date" id="paymentDate" name="paymentDate" value="" required>
+                <input type="date" id="paymentDate" name="paymentDate" required>
             </div>
             <button type="submit">Generar Factura</button>
         </form>
@@ -144,7 +160,7 @@
         </table>
     </div>
     <script>
-          function validarCedula(ci) {
+        function validarCedula(ci) {
             var isNumeric = true;
             var total = 0, individual;
 
@@ -152,7 +168,6 @@
                 individual = ci.toString().substring(position, position + 1);
 
                 if (isNaN(individual)) {
-                    console.log(ci, position, individual, isNaN(individual));
                     isNumeric = false;
                     break;
                 } else {
@@ -192,13 +207,11 @@
                     return false;
                 }
 
-                console.log('cédula válida', ci);
                 return true;
             }
 
-            alert("El dato solo puede contener numeros.");
+            alert("El dato solo puede contener números.");
             return false;
-            return cedula.length === 11; // Ejemplo simple de validación
         }
 
         document.getElementById('billingForm').addEventListener('submit', function(event) {
@@ -222,19 +235,11 @@
                 },
                 body: JSON.stringify({ owner, idNumber, paymentReason, amount, paymentDate }),
             })
-            .then(response => {
-                // Check if the response is in JSON format
-                if (response.headers.get('content-type')?.includes('application/json')) {
-                    return response.json();
-                } else {
-                    throw new Error('Invalid response from server');
-                }
-            })
+            .then(response => response.json())
             .then(data => {
                 if (data.error) {
                     alert(data.error);
                 } else {
-                    // Add the invoice to the table
                     const invoiceTable = document.getElementById('invoiceTable').getElementsByTagName('tbody')[0];
                     const newRow = invoiceTable.insertRow();
                     newRow.insertCell(0).innerText = data.invoice.owner;
@@ -243,7 +248,6 @@
                     newRow.insertCell(3).innerText = '$' + data.invoice.amount.toFixed(2);
                     newRow.insertCell(4).innerText = data.invoice.paymentDate;
 
-                    // Add delete button
                     const actionsCell = newRow.insertCell(5);
                     const deleteButton = document.createElement('button');
                     deleteButton.innerText = 'Eliminar';
@@ -253,7 +257,6 @@
                     };
                     actionsCell.appendChild(deleteButton);
 
-                    // Clear the form
                     document.getElementById('billingForm').reset();
                 }
             })
@@ -261,6 +264,30 @@
                 alert('Error: ' + error.message);
             });
         });
+
+        function loadInvoices() {
+            fetch('/get_invoices')
+                .then(response => response.json())
+                .then(data => {
+                    const tbody = document.querySelector('#invoiceTable tbody');
+                    data.forEach(invoice => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${invoice.owner}</td>
+                            <td>${invoice.id_number}</td>
+                            <td>${invoice.payment_reason}</td>
+                            <td>${invoice.amount}</td>
+                            <td>${invoice.payment_date}</td>
+                            <td>
+                                <button onclick="deleteInvoice(${invoice.id})">Eliminar</button>
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                });
+        }
+
+        document.addEventListener('DOMContentLoaded', loadInvoices);
     </script>
 </body>
 </html>

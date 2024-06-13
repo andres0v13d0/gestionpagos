@@ -1,45 +1,52 @@
 const path = require('path');
+const express = require('express');
+const bodyParser = require('body-parser');
+const db = require('./db');
 
 module.exports = function(app) {
-    let invoices = [];
+    app.use(bodyParser.json());
 
     app.get('/facturacion', (req, res) => {
         res.sendFile(path.join(__dirname, '../presentacion', 'facturacion.html'));
     });
 
-    app.post('/add_invoice', (req, res) => {
-        const owner = req.body.owner.trim();
-        const idNumber = req.body.idNumber.trim();
-        const paymentReason = req.body.paymentReason.trim();
-        const amountStr = req.body.amount.trim();
-        const paymentDate = req.body.paymentDate.trim();
+    app.post('/add_invoice', async (req, res) => {
+        const { owner, idNumber, paymentReason, amount: amountStr, paymentDate } = req.body;
 
         if (!owner || !idNumber || !paymentReason || !amountStr || !paymentDate) {
-            const error = 'Todos los campos son obligatorios';
-            return res.status(400).json({ error: error });
+            return res.status(400).json({ error: 'Todos los campos son obligatorios' });
         }
 
         const amount = parseFloat(amountStr);
         if (isNaN(amount)) {
-            const error = 'El monto debe ser un número válido';
-            return res.status(400).json({ error: error });
+            return res.status(400).json({ error: 'El monto debe ser un número válido' });
         }
 
         if (amount <= 0) {
-            const error = 'El monto debe ser mayor que cero';
-            return res.status(400).json({ error: error });
+            return res.status(400).json({ error: 'El monto debe ser mayor que cero' });
         }
 
-        const invoice = {
-            owner,
-            idNumber,
-            paymentReason,
-            amount,
-            paymentDate
-        };
-
-        invoices.push(invoice);
-
-        return res.status(200).json({ invoice: invoice });
+        try {
+            const result = await db.query(
+                'INSERT INTO invoices (owner, id_number, payment_reason, amount, payment_date) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+                [owner, idNumber, paymentReason, amount, paymentDate]
+            );
+            const invoice = result.rows[0];
+            res.status(200).json({ invoice });
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ error: 'Error al registrar la factura' });
+        }
     });
+
+    app.get('/get_invoices', async (req, res) => {
+        try {
+            const result = await db.query('SELECT * FROM invoices');
+            res.status(200).json(result.rows);
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ error: 'Error al obtener las facturas' });
+        }
+    });
+    
 };

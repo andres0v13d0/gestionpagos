@@ -6,24 +6,27 @@ const fs = require('fs');
 const app = express();
 const port = 3000;
 
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
-
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'presentacion')));
 
-// Cargar todos los archivos JavaScript en la carpeta negocio
 const negocioPath = path.join(__dirname, 'negocio');
 fs.readdirSync(negocioPath).forEach(file => {
     if (file.endsWith('.js') && file !== 'index.js') {
-        require(path.join(negocioPath, file))(app);
+        const modulePath = path.join(negocioPath, file);
+        const module = require(modulePath);
+
+        // Verificar si el módulo es una función antes de invocarlo
+        if (typeof module === 'function') {
+            module(app);
+        } else {
+            console.error(`El archivo ${file} no exporta una función`);
+        }
     }
 });
 
-// Ruta para la página principal
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
+    res.sendFile(path.join(__dirname, 'presentacion/contabilidad.html'));
 });
 
 app.listen(port, () => {

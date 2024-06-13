@@ -38,7 +38,7 @@
             border-radius: 4px;
             margin-bottom: 10px;
         }
-        .transaction-form input[type="submit"] {
+        .transaction-form button {
             background-color: #4caf50;
             color: white;
             padding: 10px 20px;
@@ -62,8 +62,28 @@
     </style>
 </head>
 <body>
+    <div style="background-color: #4caf50; width: 100%; height: 50px; margin: 0; display: flex;
+        align-items: center; padding: 10px;
+        color: white; font-weight: bold;">
+        Gestión de Pagos
+        <button style="background-color: white; border: none;
+            color: black; font-weight: bold;
+            padding: 10px;
+            margin-left: 450px;">Contabilidad</button>
+        <button style="background-color: transparent; border: none;
+            color: white; font-weight: bold;
+            padding: 10px;
+            margin-left: 10px;" onclick="location.href='facturacion.html'">Facturación</button>
+        <button style="background-color: transparent; border: none;
+        color: white; font-weight: bold;
+        padding: 10px;
+        margin-left: 10px;" onclick="location.href='contratos.html'">Contratos</button>
+        <button style="background-color: transparent; border: none;
+        color: white; font-weight: bold;
+        padding: 10px;
+        margin-left: 10px;" onclick="location.href='auditoria.html'">Auditoría</button>
+    </div>
     <div class="container">
-        <h1>Registro de Transacciones</h1>
         <div id="error-message" style="color: red;"></div>
         <form class="transaction-form" id="transaction-form">
             <label for="description">Descripción:</label>
@@ -102,14 +122,7 @@
                 },
                 body: JSON.stringify({ description, amount, category }),
             })
-            .then(response => {
-                // Check if the response is in JSON format
-                if (response.headers.get('content-type')?.includes('application/json')) {
-                    return response.json();
-                } else {
-                    throw new Error('Invalid response from server');
-                }
-            })
+            .then(response => response.json())
             .then(data => {
                 if (data.error) {
                     document.getElementById('error-message').textContent = data.error;
@@ -133,6 +146,33 @@
                 document.getElementById('error-message').textContent = error.message;
             });
         });
+
+        function loadTransactions() {
+            fetch('/get_contas')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Datos recibidos del servidor:', data);
+                    if (Array.isArray(data)) {
+                        const tbody = document.querySelector('#transaction-table tbody');
+                        data.forEach(transaction => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${transaction.description}</td>
+                                <td>${transaction.amount}</td>
+                                <td>${transaction.category}</td>
+                            `;
+                            tbody.appendChild(row);
+                        });
+                    } else {
+                        console.error('La respuesta del servidor no es una matriz:', data);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al cargar las transacciones:', error);
+                });
+        }
+
+        document.addEventListener('DOMContentLoaded', loadTransactions);
     </script>
 </body>
 </html>

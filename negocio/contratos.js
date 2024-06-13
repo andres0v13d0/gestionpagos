@@ -1,18 +1,16 @@
 const path = require('path');
 const express = require('express');
 const bodyParser = require('body-parser');
+const db = require('./db');
 
 module.exports = function(app) {
-    let contracts = [];
-    let nextId = 1;
-
     app.use(bodyParser.json());
 
     app.get('/contratos', (req, res) => {
         res.sendFile(path.join(__dirname, '../presentacion', 'contratos.html'));
     });
 
-    app.post('/add_contract', (req, res) => {
+    app.post('/add_contract', async (req, res) => {
         const { resident_name, id_number, property_address, start_date, end_date, rent } = req.body;
 
         if (!resident_name || !id_number || !property_address || !start_date || !end_date || !rent) {
@@ -31,42 +29,49 @@ module.exports = function(app) {
             return res.status(400).json({ error: 'La renta debe ser mayor a 0' });
         }
 
-        const contract = {
-            id: nextId++,
-            resident_name,
-            id_number,
-            property_address,
-            start_date,
-            end_date,
-            rent
-        };
-        contracts.push(contract);
-
-        res.status(201).json(contract);
-    });
-
-    app.get('/contracts', (req, res) => {
-        res.json(contracts);
-    });
-
-    app.get('/contracts/:id', (req, res) => {
-        const contract = contracts.find(c => c.id === parseInt(req.params.id));
-        if (contract) {
-            res.json(contract);
-        } else {
-            res.status(404).json({ error: 'Contract not found' });
+        try {
+            const result = await db.query(
+                'INSERT INTO contracts (resident_name, id_number, property_address, start_date, end_date, rent) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+                [resident_name, id_number, property_address, start_date, end_date, rent]
+            );
+            const contract = result.rows[0];
+            res.status(201).json(contract);
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ error: 'Error al registrar el contrato' });
         }
     });
 
-    app.put('/update_contracts/:id', (req, res) => {
+    app.get('/contracts', async (req, res) => {
+        try {
+            const result = await db.query('SELECT * FROM contracts');
+            res.json(result.rows);
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ error: 'Error al obtener los contratos' });
+        }
+    });
+
+    app.get('/contracts/:id', async (req, res) => {
         const id = parseInt(req.params.id);
-        const contractIndex = contracts.findIndex(c => c.id === id);
-
-        if (contractIndex === -1) {
-            return res.status(404).json({ error: 'Contract not found' });
+        try {
+            const result = await db.query('SELECT * FROM contracts WHERE id = $1', [id]);
+            const contract = result.rows[0];
+            if (contract) {
+                res.json(contract);
+            } else {
+                res.status(404).json({ error: 'Contrato no encontrado' });
+            }
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ error: 'Error al obtener el contrato' });
         }
+    });
 
+    app.put('/update_contracts/:id', async (req, res) => {
+        const id = parseInt(req.params.id);
         const { resident_name, id_number, property_address, start_date, end_date, rent } = req.body;
+
         if (!resident_name || !id_number || !property_address || !start_date || !end_date || !rent) {
             return res.status(400).json({ error: 'Todos los campos son obligatorios' });
         }
@@ -83,23 +88,28 @@ module.exports = function(app) {
             return res.status(400).json({ error: 'La renta debe ser mayor a 0' });
         }
 
-        const updatedContract = {
-            id,
-            resident_name,
-            id_number,
-            property_address,
-            start_date,
-            end_date,
-            rent
-        };
-
-        contracts[contractIndex] = updatedContract;
-        res.json(updatedContract);
+        try {
+            const result = await db.query(
+                'UPDATE contracts SET resident_name = $1, id_number = $2, property_address = $3, start_date = $4, end_date = $5, rent = $6 WHERE id = $7 RETURNING *',
+                [resident_name, id_number, property_address, start_date, end_date, rent, id]
+            );
+            const updatedContract = result.rows[0];
+            res.json(updatedContract);
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ error: 'Error al actualizar el contrato' });
+        }
     });
 
-    app.delete('/delete_contracts/:id', (req, res) => {
-        contracts = contracts.filter(contract => contract.id !== parseInt(req.params.id));
-        res.status(204).send();
+    app.delete('/delete_contracts/:id', async (req, res) => {
+        const id = parseInt(req.params.id);
+        try {
+            await db.query('DELETE FROM contracts WHERE id = $1', [id]);
+            res.status(204).send();
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ error: 'Error al eliminar el contrato' });
+        }
     });
 
     function isValidCI(ci) {
